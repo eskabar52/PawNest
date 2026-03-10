@@ -16,6 +16,8 @@ import { usePetStore } from '../../store/petStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { deletePet } from '../../services/firebase/pets';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebase.config';
 import { PET_TYPE_LABELS, PET_TYPE_ICONS } from '../../constants/config';
 import { SPACING, RADIUS } from '../../constants/fonts';
 import { COLORS } from '../../constants/colors';
@@ -44,9 +46,25 @@ export default function PetProfileScreen() {
 
   const petColor = COLORS.petColors[pet.type] || COLORS.petColors.other;
 
-  const calculateAge = (birthDate: Date): string => {
+  const parseBirthDate = (birthDate: any): Date | null => {
+    if (!birthDate) return null;
+    if (birthDate?.toDate && typeof birthDate.toDate === 'function') return birthDate.toDate();
+    if (birthDate?.seconds) return new Date(birthDate.seconds * 1000);
+    const d = new Date(birthDate);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const formatBirthDate = (birthDate: any): string => {
+    const d = parseBirthDate(birthDate);
+    if (!d) return 'Belirtilmedi';
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const calculateAge = (birthDate: any): string => {
+    const birth = parseBirthDate(birthDate);
+    if (!birth) return 'Doğum tarihi belirtilmedi';
+
     const now = new Date();
-    const birth = new Date(birthDate);
     const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
     if (months < 1) return 'Yeni doğan';
     if (months < 12) return `${months} aylık`;
@@ -57,6 +75,7 @@ export default function PetProfileScreen() {
   };
 
   const handleDelete = () => {
+    console.log("URL'den gelen kesin ID:", id);
     Alert.alert(
       'Hayvanı Sil',
       `${pet.name} adlı hayvanı silmek istediğinize emin misiniz?`,
@@ -66,12 +85,14 @@ export default function PetProfileScreen() {
           text: 'Sil',
           style: 'destructive',
           onPress: async () => {
+            console.log('Silinecek ID:', id);
             try {
-              await deletePet(pet.id);
-              removePet(pet.id);
-              router.back();
+              await deleteDoc(doc(db, "pets", id as string));
+              removePet(id as string);
+              // Hata: "GO_BACK was not handled" onlemek icin route replace kullan.
+              router.replace('/');
             } catch (error: any) {
-              Alert.alert('Hata', error.message);
+              Alert.alert('Hata', error.message || 'Silinemedi.');
             }
           },
         },
@@ -117,6 +138,8 @@ export default function PetProfileScreen() {
               <InfoRow label="Irk" value={pet.breed || '-'} theme={theme} />
               <InfoRow label="Cinsiyet" value={pet.gender === 'female' ? '♀️ Dişi' : '♂️ Erkek'} theme={theme} />
               <InfoRow label="Renk" value={pet.color || '-'} theme={theme} />
+              <InfoRow label="Doğum Tarihi" value={formatBirthDate(pet.birthDate)} theme={theme} />
+              <InfoRow label="Yaş" value={calculateAge(pet.birthDate)} theme={theme} />
               <InfoRow label="Kilo" value={pet.weight ? `${pet.weight} kg` : '-'} theme={theme} />
               <InfoRow label="Kısırlaştırma" value={pet.isNeutered ? '✅ Evet' : '❌ Hayır'} theme={theme} />
             </View>

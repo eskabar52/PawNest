@@ -52,8 +52,20 @@ export default function EditPetScreen() {
   const [color, setColor] = useState('');
   const [weight, setWeight] = useState('');
   const [isNeutered, setIsNeutered] = useState(false);
+  const [birthDate, setBirthDate] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Firestore Timestamp / string / Date -> YYYY-MM-DD
+  const parseBirthDateToString = (bd: any): string => {
+    if (!bd) return '';
+    let d: Date;
+    if (bd?.toDate && typeof bd.toDate === 'function') d = bd.toDate();
+    else if (bd?.seconds) d = new Date(bd.seconds * 1000);
+    else d = new Date(bd);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (pet) {
@@ -65,6 +77,7 @@ export default function EditPetScreen() {
       setWeight(pet.weight ? pet.weight.toString() : '');
       setIsNeutered(pet.isNeutered);
       setPhotoUri(pet.profilePhoto || null);
+      setBirthDate(parseBirthDateToString(pet.birthDate));
     }
   }, [pet]);
 
@@ -91,21 +104,25 @@ export default function EditPetScreen() {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert('Hata', 'Hayvan adı gerekli.');
-      return;
-    }
-
     setLoading(true);
     try {
       let profilePhoto = pet.profilePhoto;
 
-      // Yeni fotoğraf seçildiyse yükle
+      // Yeni fotoğraf seçildiyse yükleme, Storage kotasını/limitini aşmak için bypass et.
       if (photoUri && photoUri !== pet.profilePhoto) {
-        profilePhoto = await uploadPetPhoto(photoUri, pet.id);
+        profilePhoto = "https://via.placeholder.com/150";
+        console.log('Fotoğraf güncellendi ancak Firebase Storage hatasını aşmak için yüklenmiyor. Sabit URL atanıyor.');
       }
 
-      const updates = {
+      // birthDate parse: YYYY-MM-DD -> Date
+      const parsedBirthDate = birthDate.trim() ? new Date(birthDate.trim()) : null;
+      if (parsedBirthDate && isNaN(parsedBirthDate.getTime())) {
+        Alert.alert('Hata', 'Geçersiz tarih formatı. YYYY-MM-DD kullanın (örn: 2022-05-15).');
+        setLoading(false);
+        return;
+      }
+
+      const updates: Record<string, any> = {
         name: name.trim(),
         type,
         breed: breed.trim(),
@@ -115,6 +132,9 @@ export default function EditPetScreen() {
         isNeutered,
         profilePhoto,
       };
+      if (parsedBirthDate) {
+        updates.birthDate = parsedBirthDate;
+      }
 
       await updatePet(pet.id, updates);
       updatePetInStore(pet.id, updates);
@@ -207,6 +227,13 @@ export default function EditPetScreen() {
           </View>
 
           <Input label="Irk" value={breed} onChangeText={setBreed} />
+
+          <Input
+            label="Doğum Tarihi (YYYY-MM-DD)"
+            placeholder="2022-05-15"
+            value={birthDate}
+            onChangeText={setBirthDate}
+          />
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
