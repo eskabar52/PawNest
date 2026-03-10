@@ -1,15 +1,38 @@
 // app/(tabs)/index.tsx — Dashboard (Ana Sayfa)
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useUserStore } from '../../store/userStore';
+import { usePetStore } from '../../store/petStore';
 import { Card } from '../../components/ui/Card';
+import { PetSelector } from '../../components/pet/PetSelector';
+import { onUserPetsChanged } from '../../services/firebase/pets';
+import { PET_TYPE_ICONS, PET_TYPE_LABELS } from '../../constants/config';
+import { COLORS } from '../../constants/colors';
 import { SPACING } from '../../constants/fonts';
 
 export default function DashboardScreen() {
   const { theme, shared } = useTheme();
+  const router = useRouter();
   const user = useUserStore((s) => s.user);
+  const { pets, selectedPetId, setPets } = usePetStore();
+  const selectedPet = usePetStore((s) => s.selectedPet)();
+
+  // Hayvanları gerçek zamanlı dinle
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = onUserPetsChanged(user.id, (fetchedPets) => {
+      setPets(fetchedPets);
+    });
+    return unsubscribe;
+  }, [user?.id]);
+
+  const petColor = selectedPet
+    ? COLORS.petColors[selectedPet.type] || COLORS.petColors.other
+    : shared.secondary;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -23,35 +46,52 @@ export default function DashboardScreen() {
             Merhaba, {user?.displayName || 'Kullanıcı'} 👋
           </Text>
           <Text style={styles.appTitle}>PawNest</Text>
-          <Text style={styles.subtitle}>
-            Hayvanını ekleyerek başla!
-          </Text>
+
+          {/* Hayvan Seçici */}
+          <View style={styles.petSelectorWrapper}>
+            <PetSelector />
+          </View>
         </LinearGradient>
 
         {/* İçerik */}
         <View style={styles.content}>
-          <Card>
-            <Text style={[styles.cardEmoji]}>🐾</Text>
-            <Text
-              style={[
-                styles.cardTitle,
-                { color: theme.textPrimary, fontFamily: 'Syne_700Bold' },
-              ]}
-            >
-              Hoş Geldin!
-            </Text>
-            <Text
-              style={[
-                styles.cardDesc,
-                { color: theme.textSecondary, fontFamily: 'Nunito_400Regular' },
-              ]}
-            >
-              Hayvanını ekle ve bakım rutinlerini takip etmeye başla.
-              Dashboard bu alanda daha fazla widget ile dolacak.
-            </Text>
-          </Card>
+          {/* Seçili hayvan yoksa hoş geldin kartı */}
+          {!selectedPet ? (
+            <Card>
+              <Text style={styles.cardEmoji}>🐾</Text>
+              <Text style={[styles.cardTitle, { color: theme.textPrimary, fontFamily: 'Syne_700Bold' }]}>
+                Hoş Geldin!
+              </Text>
+              <Text style={[styles.cardDesc, { color: theme.textSecondary, fontFamily: 'Nunito_400Regular' }]}>
+                İlk hayvanını ekleyerek başla. Yukarıdaki "+" butonuna dokun.
+              </Text>
+            </Card>
+          ) : (
+            <>
+              {/* Seçili Hayvan Özet Kartı */}
+              <TouchableOpacity onPress={() => router.push(`/pet/${selectedPet.id}`)}>
+                <Card>
+                  <View style={styles.petSummary}>
+                    <View style={[styles.petIcon, { backgroundColor: `${petColor}15` }]}>
+                      <Text style={{ fontSize: 32 }}>{PET_TYPE_ICONS[selectedPet.type]}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.petName, { color: theme.textPrimary, fontFamily: 'Syne_700Bold' }]}>
+                        {selectedPet.name}
+                      </Text>
+                      <Text style={[styles.petBreed, { color: theme.textSecondary, fontFamily: 'Nunito_400Regular' }]}>
+                        {selectedPet.breed || PET_TYPE_LABELS[selectedPet.type]}
+                        {selectedPet.weight ? ` • ${selectedPet.weight} kg` : ''}
+                      </Text>
+                    </View>
+                    <Text style={[styles.arrow, { color: theme.textMuted }]}>→</Text>
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            </>
+          )}
 
-          {/* Hızlı İstatistikler Placeholder */}
+          {/* Hızlı İstatistikler */}
           <View style={styles.statsRow}>
             {[
               { emoji: '🔥', label: 'Seri', value: '0 gün' },
@@ -61,25 +101,24 @@ export default function DashboardScreen() {
             ].map((stat) => (
               <Card key={stat.label} style={styles.statCard}>
                 <Text style={{ fontSize: 20 }}>{stat.emoji}</Text>
-                <Text
-                  style={[
-                    styles.statValue,
-                    { color: shared.secondary, fontFamily: 'Nunito_800ExtraBold' },
-                  ]}
-                >
+                <Text style={[styles.statValue, { color: shared.secondary, fontFamily: 'Nunito_800ExtraBold' }]}>
                   {stat.value}
                 </Text>
-                <Text
-                  style={[
-                    styles.statLabel,
-                    { color: theme.textMuted, fontFamily: 'Nunito_700Bold' },
-                  ]}
-                >
+                <Text style={[styles.statLabel, { color: theme.textMuted, fontFamily: 'Nunito_700Bold' }]}>
                   {stat.label}
                 </Text>
               </Card>
             ))}
           </View>
+
+          {/* Hayvan sayısı bilgisi */}
+          {pets.length > 0 && (
+            <Card>
+              <Text style={[styles.infoText, { color: theme.textSecondary, fontFamily: 'Nunito_400Regular' }]}>
+                {pets.length} hayvan kayıtlı. Bakım, sağlık ve diğer modüller sonraki fazlarda aktif olacak.
+              </Text>
+            </Card>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -87,13 +126,11 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     paddingHorizontal: SPACING.xl,
     paddingTop: SPACING.lg,
-    paddingBottom: 32,
+    paddingBottom: SPACING.sm,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
   },
@@ -108,28 +145,32 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 4,
   },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 4,
+  petSelectorWrapper: {
+    marginTop: SPACING.lg,
+    marginHorizontal: -SPACING.xl,
   },
   content: {
     padding: SPACING.xl,
     gap: SPACING.lg,
   },
-  cardEmoji: {
-    fontSize: 40,
-    marginBottom: 8,
+  cardEmoji: { fontSize: 40, marginBottom: 8 },
+  cardTitle: { fontSize: 20, marginBottom: 8 },
+  cardDesc: { fontSize: 14, lineHeight: 22 },
+  petSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
   },
-  cardTitle: {
-    fontSize: 20,
-    marginBottom: 8,
+  petIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cardDesc: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
+  petName: { fontSize: 18 },
+  petBreed: { fontSize: 13, marginTop: 2 },
+  arrow: { fontSize: 20 },
   statsRow: {
     flexDirection: 'row',
     gap: SPACING.sm,
@@ -140,12 +181,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.sm,
   },
-  statValue: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  statLabel: {
-    fontSize: 10,
-    marginTop: 2,
-  },
+  statValue: { fontSize: 14, marginTop: 4 },
+  statLabel: { fontSize: 10, marginTop: 2 },
+  infoText: { fontSize: 13, lineHeight: 20, textAlign: 'center' },
 });

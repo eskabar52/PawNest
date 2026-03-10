@@ -1,5 +1,5 @@
 // app/_layout.tsx — Root Layout (ThemeProvider, fontlar, auth yönlendirme)
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -66,6 +66,7 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="pet" options={{ presentation: 'modal' }} />
       </Stack>
     </>
   );
