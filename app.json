@@ -1,27 +1,38 @@
 {
   "expo": {
-    "name": "pawnest",
+    "name": "PawNest",
     "slug": "pawnest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "pawnest",
+    "description": "Evcil hayvanınızın dijital yuvası. Bakım, sağlık, anılar ve AI asistan tek uygulamada.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0F1B2D"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pawnest.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Hayvanınızın fotoğraflarını çekmek için kamera erişimi gerekli.",
+        "NSPhotoLibraryUsageDescription": "Hayvanınızın fotoğraflarını yüklemek için galeri erişimi gerekli."
+      }
     },
     "android": {
+      "package": "com.pawnest.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F1B2D",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -29,7 +40,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Hayvanınızın fotoğraflarını seçmek için galeri erişimi gerekli.",
+          "cameraPermission": "Hayvanınızın fotoğraflarını çekmek için kamera erişimi gerekli."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }
