@@ -27,14 +27,13 @@ export function Button({
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled || loading}
+      disabled={loading || disabled}
       activeOpacity={0.8}
       style={[
         styles.base,
         isPrimary
           ? [styles.primary, { backgroundColor: shared.secondary }, SHADOWS.button]
           : [styles.secondary, { borderColor: shared.secondary }],
-        disabled && styles.disabled,
         style,
       ]}
     >

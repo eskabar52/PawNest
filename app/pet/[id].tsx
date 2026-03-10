@@ -73,10 +73,14 @@ export default function PetProfileScreen() {
   };
 
   const handleDelete = () => {
-    if (!id) return;
+    const petId = id || pet.id;
+    if (!petId) {
+      Alert.alert('Hata', 'Hayvan ID bulunamadı.');
+      return;
+    }
     Alert.alert(
       'Hayvanı Sil',
-      `${pet.name} adlı hayvanı silmek istediğinize emin misiniz?`,
+      `${pet.name} adlı hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -84,15 +88,16 @@ export default function PetProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deletePet(id);
-              removePet(id);
+              await deletePet(petId);
+              removePet(petId);
               router.replace('/');
             } catch (error: any) {
               Alert.alert('Hata', error.message || 'Silinemedi.');
             }
           },
         },
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
