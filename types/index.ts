@@ -6,6 +6,7 @@ export type PlanType = 'free' | 'premium' | 'breeder';
 export type CareFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 export type HealthRecordType = 'checkup' | 'vaccine' | 'medication' | 'surgery' | 'other';
 export type PregnancyStatus = 'active' | 'completed' | 'lost';
+export type MilestoneType = 'first_walk' | 'first_bath' | 'birthday' | 'adoption' | 'first_trick' | 'graduation' | 'travel' | 'custom';
 
 export interface User {
   id: string;
@@ -89,9 +90,21 @@ export interface Photo {
   url: string;
   caption?: string;
   isMilestone: boolean;
-  milestoneType?: string;
+  milestoneType?: MilestoneType;
   takenAt: Date;
   uploadedBy: string;
+  createdAt: Date;
+}
+
+export interface Milestone {
+  id: string;
+  petId: string;
+  type: MilestoneType;
+  title: string;
+  description?: string;
+  date: Date;
+  photoUrl?: string;
+  createdAt: Date;
 }
 
 export interface BreedingCycle {
