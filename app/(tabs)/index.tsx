@@ -111,13 +111,28 @@ export default function DashboardScreen() {
             ))}
           </View>
 
-          {/* Hayvan sayısı bilgisi */}
-          {pets.length > 0 && (
-            <Card>
-              <Text style={[styles.infoText, { color: theme.textSecondary, fontFamily: 'Nunito_400Regular' }]}>
-                {pets.length} hayvan kayıtlı. Bakım, sağlık ve diğer modüller sonraki fazlarda aktif olacak.
-              </Text>
-            </Card>
+          {/* Hızlı Erişim */}
+          {selectedPet && (
+            <View style={styles.quickAccessRow}>
+              <TouchableOpacity
+                style={[styles.quickAccessBtn, { backgroundColor: `${petColor}10`, borderColor: petColor }]}
+                onPress={() => router.push('/breeding')}
+              >
+                <Text style={{ fontSize: 20 }}>🍼</Text>
+                <Text style={[styles.quickAccessText, { color: petColor, fontFamily: 'Nunito_700Bold' }]}>
+                  Üreme Takibi
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickAccessBtn, { backgroundColor: `${shared.secondary}10`, borderColor: shared.secondary }]}
+                onPress={() => router.push('/family')}
+              >
+                <Text style={{ fontSize: 20 }}>👨‍👩‍👧‍👦</Text>
+                <Text style={[styles.quickAccessText, { color: shared.secondary, fontFamily: 'Nunito_700Bold' }]}>
+                  Aile
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </ScrollView>
@@ -184,4 +199,16 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 14, marginTop: 4 },
   statLabel: { fontSize: 10, marginTop: 2 },
   infoText: { fontSize: 13, lineHeight: 20, textAlign: 'center' },
+  quickAccessRow: { flexDirection: 'row', gap: SPACING.sm },
+  quickAccessBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  quickAccessText: { fontSize: 13 },
 });
