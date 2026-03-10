@@ -72,33 +72,21 @@ export default function PetProfileScreen() {
     return `${years} yıl ${remainingMonths} ay`;
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const petId = id || pet.id;
     if (!petId) {
       Alert.alert('Hata', 'Hayvan ID bulunamadı.');
       return;
     }
-    Alert.alert(
-      'Hayvanı Sil',
-      `${pet.name} adlı hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deletePet(petId);
-              removePet(petId);
-              router.replace('/');
-            } catch (error: any) {
-              Alert.alert('Hata', error.message || 'Silinemedi.');
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+
+    // Doğrudan silme işlemi yap — onay zaten buton rengiyle belli
+    try {
+      await deletePet(petId);
+      removePet(petId);
+      router.replace('/');
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'Silinemedi.');
+    }
   };
 
   return (
@@ -152,11 +140,25 @@ export default function PetProfileScreen() {
             onPress={() => router.push(`/pet/edit/${pet.id}`)}
           />
 
-          <Button
-            title="Hayvanı Sil"
+          <TouchableOpacity
             onPress={handleDelete}
-            variant="secondary"
-          />
+            activeOpacity={0.7}
+            style={{
+              borderRadius: 12,
+              paddingVertical: 14,
+              paddingHorizontal: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+              backgroundColor: '#DC262620',
+              borderWidth: 1.5,
+              borderColor: '#DC2626',
+            }}
+          >
+            <Text style={{ color: '#DC2626', fontSize: 16, fontWeight: '700', fontFamily: 'Nunito_700Bold' }}>
+              Hayvanı Sil
+            </Text>
+          </TouchableOpacity>
 
           <View style={{ height: 40 }} />
         </View>
