@@ -16,8 +16,6 @@ import { usePetStore } from '../../store/petStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { deletePet } from '../../services/firebase/pets';
-import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../firebase.config';
 import { PET_TYPE_LABELS, PET_TYPE_ICONS } from '../../constants/config';
 import { SPACING, RADIUS } from '../../constants/fonts';
 import { COLORS } from '../../constants/colors';
@@ -75,7 +73,7 @@ export default function PetProfileScreen() {
   };
 
   const handleDelete = () => {
-    console.log("URL'den gelen kesin ID:", id);
+    if (!id) return;
     Alert.alert(
       'Hayvanı Sil',
       `${pet.name} adlı hayvanı silmek istediğinize emin misiniz?`,
@@ -85,11 +83,9 @@ export default function PetProfileScreen() {
           text: 'Sil',
           style: 'destructive',
           onPress: async () => {
-            console.log('Silinecek ID:', id);
             try {
-              await deleteDoc(doc(db, "pets", id as string));
-              removePet(id as string);
-              // Hata: "GO_BACK was not handled" onlemek icin route replace kullan.
+              await deletePet(id);
+              removePet(id);
               router.replace('/');
             } catch (error: any) {
               Alert.alert('Hata', error.message || 'Silinemedi.');
